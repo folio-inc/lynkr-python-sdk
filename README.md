@@ -1,11 +1,11 @@
-# MyAPI Python SDK
+# Lynkr Python SDK
 
-[![PyPI version](https://img.shields.io/pypi/v/myapisdk.svg)](https://pypi.org/project/myapisdk/)
-[![Python versions](https://img.shields.io/pypi/pyversions/myapisdk.svg)](https://pypi.org/project/myapisdk/)
-[![License](https://img.shields.io/pypi/l/myapisdk.svg)](https://github.com/yourusername/myapisdk/blob/main/LICENSE)
+[![PyPI version](https://img.shields.io/pypi/v/lynkr.svg)](https://pypi.org/project/lynkr/)
+[![Python versions](https://img.shields.io/pypi/pyversions/lynkr.svg)](https://pypi.org/project/lynkr/)
+[![License](https://img.shields.io/pypi/l/lynkr.svg)](https://github.com/folio-inc/lynkr/blob/main/LICENSE)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-Official Python SDK for the MyAPI Service. This SDK provides a simple and intuitive interface to interact with MyAPI's schema generation and action execution endpoints.
+Official Python SDK for the Lynkr Service. This SDK provides a simple and intuitive interface to interact with Lynkr's schema generation and action execution endpoints.
 
 ## Features
 
@@ -18,23 +18,23 @@ Official Python SDK for the MyAPI Service. This SDK provides a simple and intuit
 ## Installation
 
 ```bash
-pip install myapisdk
+pip install lynkr
 ```
 
 ## Quick Start
 
 ```python
 import os
-from myapisdk import Client
+from lynkr import Client
 
 # Set your API key as an environment variable
-os.environ["MYAPI_API_KEY"] = "your_api_key"
+os.environ["LYNKR_API_KEY"] = "your_api_key"
 
 # Create a client
 client = Client()
 
 # Get a schema for a natural language request
-ref_id, schema = client.get_schema("Create a new user account for John Doe with email john@example.com")
+ref_id, schema = client.get_schema("Show me my current orders in my Wealthsimple account")
 
 # Print the schema details
 print(f"Reference ID: {ref_id}")
@@ -42,20 +42,18 @@ print(f"Required fields: {schema.get_required_fields()}")
 print(f"Schema JSON: {schema.to_json()}")
 
 # Fill in the schema
-user_data = {
-    "name": "John Doe",
-    "email": "john@example.com",
-    "role": "user",
-    "department": "Engineering"
+payload = {
+    "service_email": "john@example.com",
+    "service_password": "veryverysecure",
 }
 
 # Validate the data against the schema
-validation_errors = schema.validate(user_data)
+validation_errors = schema.validate(payload)
 if validation_errors:
     print(f"Validation errors: {validation_errors}")
 else:
     # Execute the action with the filled schema
-    result = client.execute_action(ref_id, user_data)
+    result = client.execute_action(ref_id, payload)
     print(f"Action result: {result}")
 ```
 
@@ -71,7 +69,7 @@ client = Client(api_key="your_api_key")
 
 # Option 2: Use environment variable
 import os
-os.environ["MYAPI_API_KEY"] = "your_api_key"
+os.environ["LYNKR_API_KEY"] = "your_api_key"
 client = Client()
 ```
 
@@ -80,7 +78,7 @@ client = Client()
 Get a schema for a natural language request:
 
 ```python
-ref_id, schema = client.get_schema("Generate a monthly report for Q1 2023 sales data")
+ref_id, schema = client.get_schema("Place an order for 100 shares of GOOG on my Wealthsimple account.")
 ```
 
 The `get_schema` method returns a tuple containing:
@@ -120,17 +118,21 @@ Once you have filled in the schema data, you can execute the action:
 ```python
 # Fill in the schema with the required data
 data = {
-    "report_format": "PDF",
-    "time_period": "Q1 2023",
-    "departments": ["Sales", "Marketing"],
-    "include_charts": True
+    "service_email": "john@example.com",
+    "service_password": "veryverysecure",
+    "security_id": "sec-s-76a7155242e8477880cbb43269235cb6",
+    "limit_price": 5.00,
+    "quantity": 100,
+    "order_type": "buy_quantity",
+    "order_sub_type": "limit",
+    "time_in_force": "day"
 }
 
 # Execute the action
 result = client.execute_action(ref_id, data)
 
 # Process the result
-print(f"Report URL: {result.get('report_url')}")
+print(f"Resulting Action: {result}")
 ```
 
 ## Error Handling
@@ -138,8 +140,8 @@ print(f"Report URL: {result.get('report_url')}")
 The SDK uses custom exceptions to provide clear error messages:
 
 ```python
-from myapisdk import Client
-from myapisdk.exceptions import ApiError, ValidationError
+from lynkr import Client
+from lynkr.exceptions import ApiError, ValidationError
 
 try:
     client = Client(api_key="invalid_key")
@@ -152,17 +154,6 @@ except ApiError as e:
 
 ## Advanced Configuration
 
-### Custom Base URL
-
-You can specify a custom base URL for the API:
-
-```python
-client = Client(
-    api_key="your_api_key",
-    base_url="https://api.yourdomain.com"
-)
-```
-
 ### Request Timeout
 
 Set a custom timeout for API requests:
@@ -172,34 +163,6 @@ client = Client(
     api_key="your_api_key",
     timeout=60  # 60 seconds
 )
-```
-
-## Development
-
-### Setup
-
-1. Clone the repository
-2. Install development dependencies:
-
-```bash
-pip install -e ".[dev]"
-```
-
-### Testing
-
-Run the tests with pytest:
-
-```bash
-pytest
-```
-
-### Documentation
-
-Build the documentation:
-
-```bash
-pip install -e ".[docs]"
-mkdocs serve
 ```
 
 ## License
