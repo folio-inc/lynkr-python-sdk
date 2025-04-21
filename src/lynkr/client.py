@@ -20,14 +20,14 @@ class LynkrClient:
     
     Args:
         api_key: API key for authentication
-        base_url: Base URL for the API (defaults to http://localhost:8000)
+        base_url: Base URL for the API (defaults to http://api.lynkr.ca)
         timeout: Request timeout in seconds
     """
     
     def __init__(
         self, 
         api_key: str = None, 
-        base_url: str = "http://localhost:8000",
+        base_url: str = "http://api.lynkr.ca",
         timeout: int = 30
     ):
         self.api_key = api_key or os.environ.get("LYNKR_API_KEY")
