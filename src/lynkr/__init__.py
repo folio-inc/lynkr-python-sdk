@@ -6,6 +6,6 @@ This package provides a convenient interface to the Lynkr Service API.
 
 __version__ = "0.1.0"
 
-from .client import Client
+from .client import LynkrClient
 
-__all__ = ["Client"]
+__all__ = ["LynkrClient"]

@@ -11,7 +11,7 @@ from .exceptions import ApiError, ValidationError
 from .schema import Schema
 
 
-class Client:
+class LynkrClient:
     """
     Lynkr client for interacting with the API service.
     
@@ -37,6 +37,7 @@ class Client:
             )
         
         self.base_url = base_url
+        self.ref_id = None
         self.http_client = HttpClient(timeout=timeout)
     
     def get_schema(self, request_string: str) -> t.Tuple[str, Schema]:
@@ -56,25 +57,27 @@ class Client:
         if not request_string or not isinstance(request_string, str):
             raise ValidationError("request_string must be a non-empty string")
         
-        endpoint = urljoin(self.base_url, "/api/v0/schema/")
+        endpoint = urljoin(self.base_url, "/api/v0/schema")
         
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
         }
         
-        params = {
-            "request": request_string
-        }
+        body={
+                "query": request_string
+            }
         
-        response = self.http_client.get(
+        response = self.http_client.post(
             url=endpoint,
             headers=headers,
-            params=params
+            json=body
         )
         
         # Extract ref_id and schema from response
         ref_id = response.get("ref_id")
+        self.ref_id = ref_id
+
         schema_data = response.get("schema")
         
         if not ref_id or not schema_data:
@@ -82,12 +85,26 @@ class Client:
             
         return ref_id, Schema(schema_data)
     
-    def execute_action(self, ref_id: str, schema_data: t.Dict[str, t.Any]) -> t.Dict[str, t.Any]:
+    def toExecuteFormat(self, schema: Schema) -> t.Dict[str, t.Any]:
+        """
+        Convert schema to a format suitable for execution.
+        
+        Args:
+            schema: Schema object
+        
+        Returns:
+            Dict representation of the schema for execution
+        """
+        return {
+            "schema": schema.to_dict()
+        }
+    
+    def execute_action(self, schema_data: t.Dict[str, t.Any], ref_id: t.Optional[str] = None) -> t.Dict[str, t.Any]:
         """
         Execute an action using the provided schema data.
         
         Args:
-            ref_id: Reference ID returned from get_schema
+            ref_id: Reference ID returned from get_schema default set to most recent get_schema call
             schema_data: Filled schema data according to the schema structure
             
         Returns:
@@ -97,22 +114,33 @@ class Client:
             ApiError: If the API returns an error
             ValidationError: If the input is invalid
         """
-        if not ref_id or not isinstance(ref_id, str):
-            raise ValidationError("ref_id must be a non-empty string")
             
+        if ref_id is None and self.ref_id is None:
+            return {
+                "error": "ref_id is required to execute an action"
+            }
+        else:
+            ref_id = ref_id or self.ref_id
+
+
         if not schema_data or not isinstance(schema_data, dict):
             raise ValidationError("schema_data must be a non-empty dictionary")
         
-        endpoint = urljoin(self.base_url, "/api/v0/execute/")
+        schema_payload = {
+            "fields": { k: { "value": v } for k, v in schema_data.items() }
+        }
+        
+        endpoint = urljoin(self.base_url, "/api/v0/execute")
         
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
         }
         
+
         payload = {
             "ref_id": ref_id,
-            "data": schema_data
+            "schema": schema_payload
         }
         
         response = self.http_client.post(
